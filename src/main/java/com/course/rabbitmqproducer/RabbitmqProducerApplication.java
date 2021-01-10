@@ -4,6 +4,7 @@ import com.course.rabbitmqproducer.model.Employee;
 import com.course.rabbitmqproducer.model.Picture;
 import com.course.rabbitmqproducer.producer.EmployeeJsonProducer;
 import com.course.rabbitmqproducer.producer.PictureProducer;
+import com.course.rabbitmqproducer.producer.PictureTopicExchangeProducer;
 import com.course.rabbitmqproducer.producer.ResourceJsonProducer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,13 +29,16 @@ public class RabbitmqProducerApplication implements CommandLineRunner {
 
     private final PictureProducer pictureProducer;
 
+    private final PictureTopicExchangeProducer pictureTopicExchangeProducer;
+
     private List<String> SOURCES= List.of("mobile", "web");
     private List<String> TYPES= List.of("jpg", "svg", "png");
 
-    public RabbitmqProducerApplication(EmployeeJsonProducer employeeJsonProducer, ResourceJsonProducer resourceJsonProducer, PictureProducer pictureProducer) {
+    public RabbitmqProducerApplication(EmployeeJsonProducer employeeJsonProducer, ResourceJsonProducer resourceJsonProducer, PictureProducer pictureProducer, PictureTopicExchangeProducer pictureTopicExchangeProducer) {
         this.employeeJsonProducer = employeeJsonProducer;
         this.resourceJsonProducer = resourceJsonProducer;
         this.pictureProducer = pictureProducer;
+        this.pictureTopicExchangeProducer = pictureTopicExchangeProducer;
     }
 
     public static void main(String[] args) {
@@ -58,6 +62,7 @@ public class RabbitmqProducerApplication implements CommandLineRunner {
             picture.setSize(ThreadLocalRandom.current().nextLong(1,10001));
             logger.info("Picture: {}", picture);
             pictureProducer.sendPicture(picture);
+            pictureTopicExchangeProducer.sendPicture(picture);
 
         }
     }
