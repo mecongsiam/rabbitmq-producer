@@ -2,11 +2,10 @@ package com.course.rabbitmqproducer;
 
 import com.course.rabbitmqproducer.model.Employee;
 import com.course.rabbitmqproducer.producer.EmployeeJsonProducer;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.course.rabbitmqproducer.producer.ResourceJsonProducer;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 import java.time.LocalDate;
@@ -17,8 +16,11 @@ public class RabbitmqProducerApplication implements CommandLineRunner {
 
     private final EmployeeJsonProducer employeeJsonProducer;
 
-    public RabbitmqProducerApplication(EmployeeJsonProducer employeeJsonProducer) {
+    private final ResourceJsonProducer resourceJsonProducer;
+
+    public RabbitmqProducerApplication(EmployeeJsonProducer employeeJsonProducer, ResourceJsonProducer resourceJsonProducer) {
         this.employeeJsonProducer = employeeJsonProducer;
+        this.resourceJsonProducer = resourceJsonProducer;
     }
 
     public static void main(String[] args) {
@@ -29,6 +31,8 @@ public class RabbitmqProducerApplication implements CommandLineRunner {
     public void run(String... args) throws Exception {
         for (int i = 0; i < 5; i++) {
             employeeJsonProducer.sendMessage(new Employee(Integer.toString(i), "Employee " + i,
+                    LocalDate.now()));
+            resourceJsonProducer.sendMessage(new Employee(Integer.toString(i), "Employee " + i,
                     LocalDate.now()));
         }
     }
