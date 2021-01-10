@@ -2,10 +2,7 @@ package com.course.rabbitmqproducer;
 
 import com.course.rabbitmqproducer.model.Employee;
 import com.course.rabbitmqproducer.model.Picture;
-import com.course.rabbitmqproducer.producer.EmployeeJsonProducer;
-import com.course.rabbitmqproducer.producer.PictureProducer;
-import com.course.rabbitmqproducer.producer.PictureTopicExchangeProducer;
-import com.course.rabbitmqproducer.producer.ResourceJsonProducer;
+import com.course.rabbitmqproducer.producer.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
@@ -30,15 +27,17 @@ public class RabbitmqProducerApplication implements CommandLineRunner {
     private final PictureProducer pictureProducer;
 
     private final PictureTopicExchangeProducer pictureTopicExchangeProducer;
+    private final MyPictureProducer myPictureProducer;
 
     private List<String> SOURCES= List.of("mobile", "web");
     private List<String> TYPES= List.of("jpg", "svg", "png");
 
-    public RabbitmqProducerApplication(EmployeeJsonProducer employeeJsonProducer, ResourceJsonProducer resourceJsonProducer, PictureProducer pictureProducer, PictureTopicExchangeProducer pictureTopicExchangeProducer) {
+    public RabbitmqProducerApplication(EmployeeJsonProducer employeeJsonProducer, ResourceJsonProducer resourceJsonProducer, PictureProducer pictureProducer, PictureTopicExchangeProducer pictureTopicExchangeProducer, MyPictureProducer myPictureProducer) {
         this.employeeJsonProducer = employeeJsonProducer;
         this.resourceJsonProducer = resourceJsonProducer;
         this.pictureProducer = pictureProducer;
         this.pictureTopicExchangeProducer = pictureTopicExchangeProducer;
+        this.myPictureProducer = myPictureProducer;
     }
 
     public static void main(String[] args) {
@@ -55,7 +54,6 @@ public class RabbitmqProducerApplication implements CommandLineRunner {
         }
         for (int i = 0; i < 10; i++){
             var picture = new Picture();
-
             picture.setName("Picture "+ i);
             picture.setSource(SOURCES.get(i%SOURCES.size()));
             picture.setType(TYPES.get(i%TYPES.size()));
@@ -65,6 +63,13 @@ public class RabbitmqProducerApplication implements CommandLineRunner {
             pictureTopicExchangeProducer.sendPicture(picture);
 
         }
+        var picture = new Picture();
+        picture.setName("Exception picture");
+        picture.setSize(9001L);
+        picture.setType("jpq");
+        picture.setSource("mobile");
+        myPictureProducer.sendPicture(picture);
+
     }
 
 }
