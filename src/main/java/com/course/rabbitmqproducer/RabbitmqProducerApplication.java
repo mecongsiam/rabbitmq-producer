@@ -1,6 +1,5 @@
 package com.course.rabbitmqproducer;
 
-import com.course.rabbitmqproducer.model.Employee;
 import com.course.rabbitmqproducer.model.Picture;
 import com.course.rabbitmqproducer.producer.*;
 import org.slf4j.Logger;
@@ -10,7 +9,6 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -29,15 +27,18 @@ public class RabbitmqProducerApplication implements CommandLineRunner {
     private final PictureTopicExchangeProducer pictureTopicExchangeProducer;
     private final MyPictureProducer myPictureProducer;
 
+    private final RetryPictureProducer retryPictureProducer;
+
     private List<String> SOURCES= List.of("mobile", "web");
     private List<String> TYPES= List.of("jpg", "svg", "png");
 
-    public RabbitmqProducerApplication(EmployeeJsonProducer employeeJsonProducer, ResourceJsonProducer resourceJsonProducer, PictureProducer pictureProducer, PictureTopicExchangeProducer pictureTopicExchangeProducer, MyPictureProducer myPictureProducer) {
+    public RabbitmqProducerApplication(EmployeeJsonProducer employeeJsonProducer, ResourceJsonProducer resourceJsonProducer, PictureProducer pictureProducer, PictureTopicExchangeProducer pictureTopicExchangeProducer, MyPictureProducer myPictureProducer, RetryPictureProducer retryPictureProducer) {
         this.employeeJsonProducer = employeeJsonProducer;
         this.resourceJsonProducer = resourceJsonProducer;
         this.pictureProducer = pictureProducer;
         this.pictureTopicExchangeProducer = pictureTopicExchangeProducer;
         this.myPictureProducer = myPictureProducer;
+        this.retryPictureProducer = retryPictureProducer;
     }
 
     public static void main(String[] args) {
@@ -46,29 +47,16 @@ public class RabbitmqProducerApplication implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        for (int i = 0; i < 5; i++) {
-            employeeJsonProducer.sendMessage(new Employee(Integer.toString(i), "Employee " + i,
-                    LocalDate.now()));
-            resourceJsonProducer.sendMessage(new Employee(Integer.toString(i), "Employee " + i,
-                    LocalDate.now()));
-        }
-        for (int i = 0; i < 10; i++){
-            var picture = new Picture();
-            picture.setName("Picture "+ i);
-            picture.setSource(SOURCES.get(i%SOURCES.size()));
-            picture.setType(TYPES.get(i%TYPES.size()));
-            picture.setSize(ThreadLocalRandom.current().nextLong(1,10001));
-            logger.info("Picture: {}", picture);
-            pictureProducer.sendPicture(picture);
-            pictureTopicExchangeProducer.sendPicture(picture);
+        for (int i = 0; i < 10; i++) {
+            var p = new Picture();
 
+            p.setName("Picture " + i);
+            p.setSize(ThreadLocalRandom.current().nextLong(9001, 10001));
+            p.setSource(SOURCES.get(i % SOURCES.size()));
+            p.setType(TYPES.get(i % TYPES.size()));
+
+            retryPictureProducer.sendMessage(p);
         }
-        var picture = new Picture();
-        picture.setName("Exception picture");
-        picture.setSize(9001L);
-        picture.setType("jpq");
-        picture.setSource("mobile");
-        myPictureProducer.sendPicture(picture);
 
     }
 
