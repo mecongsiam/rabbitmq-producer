@@ -1,16 +1,16 @@
 package com.course.rabbitmqproducer;
 
-import com.course.rabbitmqproducer.model.Employee;
+import com.course.rabbitmqproducer.model.*;
 import com.course.rabbitmqproducer.producer.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.scheduling.annotation.EnableScheduling;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 @SpringBootApplication
 //@EnableScheduling
@@ -31,10 +31,12 @@ public class RabbitmqProducerApplication implements CommandLineRunner {
 
     private final RetryEmployeeProducer retryEmployeeProducer;
 
+    private final InvoiceProducer invoiceProducer;
+
     private List<String> SOURCES= List.of("mobile", "web");
     private List<String> TYPES= List.of("jpg", "svg", "png");
 
-    public RabbitmqProducerApplication(EmployeeJsonProducer employeeJsonProducer, ResourceJsonProducer resourceJsonProducer, PictureProducer pictureProducer, PictureTopicExchangeProducer pictureTopicExchangeProducer, MyPictureProducer myPictureProducer, RetryPictureProducer retryPictureProducer, RetryEmployeeProducer retryEmployeeProducer) {
+    public RabbitmqProducerApplication(EmployeeJsonProducer employeeJsonProducer, ResourceJsonProducer resourceJsonProducer, PictureProducer pictureProducer, PictureTopicExchangeProducer pictureTopicExchangeProducer, MyPictureProducer myPictureProducer, RetryPictureProducer retryPictureProducer, RetryEmployeeProducer retryEmployeeProducer, InvoiceProducer invoiceProducer) {
         this.employeeJsonProducer = employeeJsonProducer;
         this.resourceJsonProducer = resourceJsonProducer;
         this.pictureProducer = pictureProducer;
@@ -42,6 +44,7 @@ public class RabbitmqProducerApplication implements CommandLineRunner {
         this.myPictureProducer = myPictureProducer;
         this.retryPictureProducer = retryPictureProducer;
         this.retryEmployeeProducer = retryEmployeeProducer;
+        this.invoiceProducer = invoiceProducer;
     }
 
     public static void main(String[] args) {
@@ -51,10 +54,20 @@ public class RabbitmqProducerApplication implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        for (int i = 0; i < 10; i++) {
-            Employee emp = new Employee("Employee" + i, null, LocalDate.now());
-            retryEmployeeProducer.sendMessage(emp);
-        }
+        var invoiceCreatedMessage = new InvoiceCreatedMessage(ThreadLocalRandom.current().nextInt(100), LocalDate.now(), "USD",
+                "1");
+        invoiceProducer.sendInvoiceCreated(invoiceCreatedMessage);
+
+        var invoicePaid = new InvoicePaidMessage("1", LocalDate.now(),
+                "2");
+        invoiceProducer.sendInvoicePaid(invoicePaid);
+
+        var invoiceRejectedMessage = new InvoiceRejectedMessage(LocalDate.now(),"1", "reason");
+        invoiceProducer.sendInvoiceRejected(invoiceRejectedMessage);
+
+        var invoiceCanceledMessage = new InvoiceCancelledMessage(LocalDate.now(),"1","reason");
+        invoiceProducer.sendInvoiceCancelled(invoiceCanceledMessage);
+
     }
 
 }
